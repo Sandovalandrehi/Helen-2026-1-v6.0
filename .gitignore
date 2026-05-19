@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+helen-ml-env/
+env/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Datos de entrenamiento y modelos (se generan localmente)
+gesture_dataset/
+*.npy
+*.npz
+*.pth
+
+# Credenciales y configuracion sensible
+.env
+.env.pi
+.env.local
+tinytuya.json
+tuya-raw.json
+snapshot.json
+devices.json
+Helen-Web/backend/websocket-server/devices.json
+Helen-Web/backend/websocket-server/snapshot.json
+Helen-Web/backend/websocket-server/tinytuya.json
+Helen-Web/backend/websocket-server/tuya-raw.json
+
+# Artefactos de build
+pi-dist.zip
+
+# Logs
+*.log
+/tmp/

@@ -1,0 +1,14 @@
+{
+  "agregar": 0,
+  "alarma": 1,
+  "apagar": 2,
+  "camara": 3,
+  "clima": 4,
+  "colores": 5,
+  "configuracion": 6,
+  "dispositivos": 7,
+  "editar": 8,
+  "encender": 9,
+  "home": 10,
+  "wifi": 11
+}

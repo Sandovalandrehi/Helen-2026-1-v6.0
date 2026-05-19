@@ -1,0 +1,16 @@
+{
+  "name": "helen-web",
+  "version": "1.0.0",
+  "description": "Helen is an intelligent home assistant for the deaf community that recognizes Mexican Sign Language (LSM) gestures to control smart home devices. This version represents a complete architectural migration from Electron to a web-based application optimized for Raspberry Pi deployment.",
+  "main": "create-guide.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "docx": "^9.6.1"
+  }
+}
