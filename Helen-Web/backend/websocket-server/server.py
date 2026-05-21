@@ -351,6 +351,13 @@ def tapo_state_endpoint():
         'enabled': tapo_service.is_enabled
     }
 
+# helen_watch — additive integration of the Helen-ESP32 wristwatch.
+# Registers POST /external_gesture and GET /watch_summary as a Flask Blueprint
+# and reuses this server's Socket.IO to emit 'prediction' to the frontend.
+# Remove these two lines to revert to the original behavior.
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from helen_watch import register as register_helen_watch; register_helen_watch(app, socketio)
+
 if __name__ == '__main__':
     """
     Main entrypoint for running the WebSocket server.
