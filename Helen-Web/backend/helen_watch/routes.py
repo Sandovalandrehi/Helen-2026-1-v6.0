@@ -112,7 +112,7 @@ def external_gesture():
         return jsonify({'error': 'helen_watch not initialized'}), 500
 
     logger.info(f"[helen_watch] Emitting prediction from source={data.get('source')}: {payload}")
-    _socketio.emit('prediction', payload)
+    _socketio.emit('prediction', payload, to='watch_clients')
     return jsonify({'status': 'ok'}), 200
 
 

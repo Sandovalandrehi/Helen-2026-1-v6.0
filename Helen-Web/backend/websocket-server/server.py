@@ -196,11 +196,23 @@ def handle_connect():
         'session_id': session_id
     })
 
+@socketio.on('join_watch')
+def handle_join_watch():
+    """
+    Subscribe the calling client to the 'watch_clients' room so it receives
+    predictions emitted by the Helen-ESP32 wristwatch via /external_gesture.
+    Clients that never emit this event will NOT receive watch predictions.
+    """
+    from flask_socketio import join_room
+    join_room('watch_clients')
+    logger.info(f"Client {request.sid} joined watch_clients room")
+    emit('watch_joined', {'status': 'subscribed', 'room': 'watch_clients'})
+
 @socketio.on('disconnect')
 def handle_disconnect():
     """
     Handle client disconnection event.
-    
+
     Cleans up the frame buffer and cooldown timer for the session.
     """
     session_id = request.sid
