@@ -114,10 +114,25 @@ class WebSocketService {
         if (!Array.isArray(landmarks) || landmarks.length !== 126) {
             return false;
         }
-        
+
         this.socket.emit('add_frame', { landmarks });
-        
+
         return true;
+    }
+
+    /**
+     * Subscribe this client to the 'watch_clients' room so it receives
+     * gesture predictions sent by the Helen-ESP32 wristwatch via
+     * POST /external_gesture. Clients that never call this method will
+     * NOT receive watch predictions (camera flow is unaffected).
+     */
+    joinWatch() {
+        if (!this.isConnected || !this.socket) {
+            console.warn('[watch] Socket not connected, cannot join watch room');
+            return;
+        }
+        this.socket.emit('join_watch');
+        console.log('[watch] join_watch emitted');
     }
 
     /**
