@@ -5,6 +5,7 @@
  */
 
 import { io } from 'socket.io-client';
+import { IS_WATCH_PI } from '../config/watchMode';
 
 class WebSocketService {
     constructor() {
@@ -54,6 +55,14 @@ class WebSocketService {
         this.reconnectAttempts = 0;
         // Log successful WebSocket connection
         console.log('WebSocket connected');
+        // Auto-union al room 'watch_clients' si la URL trae ?watch=1.
+        // Se hace aqui dentro del handler de 'connect' (y no en un useEffect)
+        // para evitar condiciones de carrera: en el instante exacto en que el
+        // socket conecta se emite join_watch. Tambien re-une tras reconexiones.
+        if (IS_WATCH_PI) {
+            this.socket.emit('join_watch');
+            console.log('[watch] join_watch emitted');
+        }
         this.emit('connect');
     });
 
@@ -118,21 +127,6 @@ class WebSocketService {
         this.socket.emit('add_frame', { landmarks });
 
         return true;
-    }
-
-    /**
-     * Subscribe this client to the 'watch_clients' room so it receives
-     * gesture predictions sent by the Helen-ESP32 wristwatch via
-     * POST /external_gesture. Clients that never call this method will
-     * NOT receive watch predictions (camera flow is unaffected).
-     */
-    joinWatch() {
-        if (!this.isConnected || !this.socket) {
-            console.warn('[watch] Socket not connected, cannot join watch room');
-            return;
-        }
-        this.socket.emit('join_watch');
-        console.log('[watch] join_watch emitted');
     }
 
     /**
