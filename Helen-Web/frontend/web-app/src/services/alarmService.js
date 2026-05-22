@@ -3,6 +3,8 @@
  * WEB VERSION with persistent scheduler
  */
 
+import { IS_WATCH_PI } from '../config/watchMode';
+
 class EventEmitter {
   constructor() {
     this.events = {};
@@ -20,6 +22,11 @@ class EventEmitter {
     this.events[event].forEach(cb => cb(...args));
   }
 }
+
+// Endpoint del backend (mismo servidor que el WebSocket, puerto 5001) al que
+// se sincronizan las alarmas para que el reloj Helen-ESP32 pueda mostrarlas.
+const WATCH_SYNC_URL =
+  (import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:5001') + '/watch_alarms';
 
 class AlarmService extends EventEmitter {
     constructor() {
@@ -58,6 +65,45 @@ class AlarmService extends EventEmitter {
         } catch (e) {
             console.error('Error saving alarms:', e);
         }
+        this.syncToBackend();
+    }
+
+    /**
+     * Normaliza la hora de una alarma a formato "HH:MM".
+     * Las alarmas pueden guardar la hora como "HH:MM" o como ISO con 'T'.
+     */
+    toHHMM(time) {
+        if (typeof time !== 'string') return '--:--';
+        if (time.includes('T')) {
+            const d = new Date(time);
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+        return time;
+    }
+
+    /**
+     * Envía las alarmas activas al backend para que el reloj Helen-ESP32
+     * las pueda mostrar. Solo sincroniza la Pi emparejada con el reloj
+     * (la que se abre con ?watch=1), para que el reloj muestre las alarmas
+     * de ESTA pantalla y no las de otra Pi corriendo la misma app.
+     */
+    syncToBackend() {
+        if (!IS_WATCH_PI) return;
+
+        const payload = this.getAlarms()
+            .filter(a => a.isEnabled)
+            .map(a => ({ time: this.toHHMM(a.time), label: a.label || '' }))
+            .sort((x, y) => x.time.localeCompare(y.time));
+
+        fetch(WATCH_SYNC_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ alarms: payload }),
+        }).catch(() => {
+            // Backend offline: se reintenta en el siguiente ciclo del scheduler.
+        });
     }
 
     async getAllAlarms() {
@@ -164,6 +210,10 @@ class AlarmService extends EventEmitter {
     }
 
     async checkAlarms() {
+        // Re-sincroniza periodicamente (cada 5 s) por si el backend se
+        // reinicio o el frontend cargo antes que el backend estuviera listo.
+        this.syncToBackend();
+
         const now = new Date();
         const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         

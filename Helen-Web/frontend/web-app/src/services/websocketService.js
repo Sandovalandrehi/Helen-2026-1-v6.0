@@ -5,6 +5,7 @@
  */
 
 import { io } from 'socket.io-client';
+import { IS_WATCH_PI } from '../config/watchMode';
 
 class WebSocketService {
     constructor() {
@@ -54,6 +55,14 @@ class WebSocketService {
         this.reconnectAttempts = 0;
         // Log successful WebSocket connection
         console.log('WebSocket connected');
+        // Auto-union al room 'watch_clients' si la URL trae ?watch=1.
+        // Se hace aqui dentro del handler de 'connect' (y no en un useEffect)
+        // para evitar condiciones de carrera: en el instante exacto en que el
+        // socket conecta se emite join_watch. Tambien re-une tras reconexiones.
+        if (IS_WATCH_PI) {
+            this.socket.emit('join_watch');
+            console.log('[watch] join_watch emitted');
+        }
         this.emit('connect');
     });
 

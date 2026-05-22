@@ -21,7 +21,7 @@ from pathlib import Path
 
 from flask import Blueprint, request, jsonify
 
-from .watch_summary import build_summary
+from .watch_summary import build_summary, set_alarms
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +114,29 @@ def external_gesture():
     logger.info(f"[helen_watch] Emitting prediction from source={data.get('source')}: {payload}")
     _socketio.emit('prediction', payload, to='watch_clients')
     return jsonify({'status': 'ok'}), 200
+
+
+@bp.route('/watch_alarms', methods=['POST'])
+def watch_alarms():
+    """
+    Recibe del frontend la lista de alarmas (las que viven en su localStorage)
+    y las guarda en memoria para que el reloj las consulte via /watch_summary.
+
+    Body JSON esperado:
+        alarms (list): lista de objetos, cada uno con 'time' y 'label'.
+
+    No requiere X-Helen-Token: el emisor es el frontend (cliente local de
+    confianza), no el reloj.
+    """
+    data = request.get_json(silent=True) or {}
+    alarms = data.get('alarms')
+
+    if not isinstance(alarms, list):
+        return jsonify({'error': 'alarms must be a list'}), 400
+
+    set_alarms(alarms)
+    logger.info(f"[helen_watch] Alarmas sincronizadas desde el frontend: {len(alarms)}")
+    return jsonify({'status': 'ok', 'count': len(alarms)}), 200
 
 
 @bp.route('/watch_summary', methods=['GET'])

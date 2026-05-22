@@ -1,10 +1,27 @@
 """
 Builders de resumen para el LCD del reloj.
 
-Por ahora devuelve placeholders. Cuando se cablee con fuentes reales (API
-de clima, storage de alarmas), solo cambian estas funciones — las rutas
-(routes.py) no se tocan.
+Las alarmas reales viven en el localStorage del navegador (frontend). El
+frontend las sincroniza a este backend via POST /watch_alarms; aqui se
+guardan en memoria y el reloj las consulta via GET /watch_summary?cmd=alarma.
+
+Si el frontend nunca sincronizo (backend recien arrancado), se devuelve un
+placeholder para que el reloj no muestre una pantalla vacia.
 """
+
+# None = el frontend nunca sincronizo. Lista = alarmas reales del frontend.
+_synced_alarms = None
+
+
+def set_alarms(alarms: list) -> None:
+    """
+    Guarda la lista de alarmas que el frontend sincronizo.
+
+    Args:
+        alarms: lista de dicts, cada uno con al menos 'time' y 'label'.
+    """
+    global _synced_alarms
+    _synced_alarms = alarms
 
 
 def build_summary(cmd: str) -> dict:
@@ -24,6 +41,8 @@ def build_summary(cmd: str) -> dict:
         return _placeholder_weather()
 
     if cmd == 'alarma':
+        if _synced_alarms is not None:
+            return {'alarms': _synced_alarms}
         return _placeholder_alarms()
 
     return {'icon': 'none'}
@@ -33,8 +52,7 @@ def _placeholder_weather() -> dict:
     """
     Placeholder de clima.
 
-    TODO: cablear con la fuente real que use el frontend en WeatherScreen
-    (probablemente OpenWeather con una API key en env var).
+    TODO: cablear con la fuente real que use el frontend en WeatherScreen.
     """
     return {
         'icon': 'sun',
@@ -45,10 +63,7 @@ def _placeholder_weather() -> dict:
 
 def _placeholder_alarms() -> dict:
     """
-    Placeholder de alarmas.
-
-    TODO: persistir alarmas en el backend (archivo o SQLite) cuando se
-    creen desde AlarmScreen del frontend, y leer top 3 aquí.
+    Placeholder de alarmas: solo se usa si el frontend aun no sincronizo.
     """
     return {
         'alarms': [
