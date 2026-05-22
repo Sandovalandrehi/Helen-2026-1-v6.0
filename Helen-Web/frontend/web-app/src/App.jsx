@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CameraProvider } from './contexts/CameraContext';
@@ -10,7 +10,6 @@ import { TouchHandler } from './components/input/TouchHandler';
 import { AlarmNotification } from './components/alarms/AlarmNotification';
 import { useAlarmNotification } from './contexts/alarmNotificationHooks';
 import { ROUTES } from './config/constants';
-import websocketService from './services/websocketService';
 import './App.css';
 
 /**
@@ -93,30 +92,6 @@ const AppRoutes = () => {
  * - Suspense provides smooth loading experience
  */
 function App() {
-  // Helen-ESP32 wristwatch mode: when the URL includes ?watch=1, this client
-  // subscribes to the 'watch_clients' Socket.IO room so it receives gesture
-  // predictions emitted by the watch via POST /external_gesture. Without this
-  // flag the client never joins the room and is isolated from watch traffic.
-  useEffect(() => {
-    const isWatchMode = new URLSearchParams(window.location.search).get('watch') === '1';
-    if (!isWatchMode) return;
-
-    websocketService.connect();
-
-    // Cover the case where another provider already connected the socket
-    // before this effect runs (the 'connect' event would have fired already).
-    if (websocketService.isConnected) {
-      websocketService.joinWatch();
-    }
-
-    // Also subscribe to future 'connect' events (first connection or
-    // reconnections after a drop, since the room is lost on reconnect).
-    const unsubscribe = websocketService.on('connect', () => {
-      websocketService.joinWatch();
-    });
-    return unsubscribe;
-  }, []);
-
   return (
     <ThemeProvider>
       <CameraProvider>

@@ -130,21 +130,6 @@ class WebSocketService {
     }
 
     /**
-     * Subscribe this client to the 'watch_clients' room so it receives
-     * gesture predictions sent by the Helen-ESP32 wristwatch via
-     * POST /external_gesture. Clients that never call this method will
-     * NOT receive watch predictions (camera flow is unaffected).
-     */
-    joinWatch() {
-        if (!this.isConnected || !this.socket) {
-            console.warn('[watch] Socket not connected, cannot join watch room');
-            return;
-        }
-        this.socket.emit('join_watch');
-        console.log('[watch] join_watch emitted');
-    }
-
-    /**
      * Subscribe to events
      */
     on(event, callback) {
